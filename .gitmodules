@@ -1,0 +1,12 @@
+[submodule "src/horizon_detection"]
+	path = src/horizon_detection
+	url = https://github.com/in-flight-calibration/horizon_detection.git
+[submodule "src/px4_msgs"]
+	path = src/px4_msgs
+	url = git@github.com:in-flight-calibration/px4_msgs.git
+[submodule "src/ifc_tools"]
+	path = src/ifc_tools
+	url = https://github.com/in-flight-calibration/ifc_tools.git
+[submodule "src/ifc_msgs"]
+	path = src/ifc_msgs
+	url = git@github.com:in-flight-calibration/ifc_msgs.git
