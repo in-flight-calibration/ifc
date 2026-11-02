@@ -21,22 +21,31 @@
           kernel_size: 7
         # HoughLinesP (lengths relative to image width)
         line_detect:
-          rho_resolution_px: 3.0
-          theta_resolution_degrees: 1.0
+          rho_resolution_px: 2.0
+          theta_resolution_degrees: 0.5
           threshold: 50
           minimum_line_length_ratio: 0.2
           maximum_line_gap_ratio: 0.025
         line_grouping:
-          angle_tolerance_degrees: 2.0
-          rho_tolerance: 0.025
+          distance_tolerance: 0.02
           slots: 5
         estimator:
-          minimum_coverage: 0.1
-          minimum_score: 0.5
-          ambiguity_margin: 0.1
-          stale_seconds: 0.1
-          max_theta_rate_degrees_per_second: 90.0
-          max_rho_rate_per_second: 1.0
-          tau_rise_seconds: 0.5
-          minimum_confidence: 0.3
-          switch_confirmation_frames: 2
+          minimal_init_score: 0.33
+          minimal_update_score: 0.6
+          timeout_s: 0.1
+          max_theta_rate: 90.0
+          max_rho_rate: 1.0
+          confidance_filter_tau: 0.5
+
+    delay:
+      clock_offset_configured: false
+      camera_to_attitude_seconds: 0.0
+      horizon_topic: /horizon_detection/horizon
+      attitude_topic: /fmu/out/vehicle_attitude
+      result_topic: /delay_estimator/estimate
+      window_seconds: 20.0
+      update_seconds: 2.0
+      minimum_offset: -0.5
+      maximum_offset: 0.5
+      grid_step: 0.025
+      resolution: 0.001
