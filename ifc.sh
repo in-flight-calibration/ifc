@@ -3,6 +3,8 @@
 set -e
 cd "$(dirname "$0")"
 
+export RMW_IMPLEMENTATION=rmw_zenoh_cpp
+
 ros_distro="$(ls /opt/ros | sort -V | tail -n 1)"
 source "/opt/ros/${ros_distro}/setup.bash"
 
