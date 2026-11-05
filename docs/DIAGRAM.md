@@ -18,19 +18,28 @@ flowchart TB
 
     delay([Delay estimator])
     horizon([Horizon detection])
-    manager([Calibration manager]):::manager
-    stream([Stream telemetry]):::telemetry
+    synchronizer([Telemetry synchronizer])
     tracker([Feature tracker])
 
+    subgraph outputs [" "]
+        direction LR
+        manager([Calibration manager]):::manager
+        stream([Stream telemetry]):::telemetry
+    end
+    style outputs fill:none,stroke:none
+
     autopilot -->|vehicle_angular_velocity<br/>vehicle_attitude| delay
-    autopilot -->|vehicle_attitude<br/>vehicle_local_position<br/>vehicle_global_position| stream
+    autopilot -->|vehicle_attitude<br/>vehicle_local_position<br/>vehicle_global_position| synchronizer
     camera -->|video| horizon
     camera -->|video| tracker
+    camera -->|frame timestamps| synchronizer
     delay -->|delay| manager
     horizon -->|horizon| delay
     horizon -->|horizon| stream
     horizon -->|horizon| tracker
-    manager -.->|calibration_results| stream
+    manager -.->|calibration_results| synchronizer
+    synchronizer -->|autopilot_telemetry| stream
+    synchronizer -.->|autopilot_telemetry| tracker
     tracker -->|feature_matches| delay
     tracker -->|feature_matches| stream
 ```
