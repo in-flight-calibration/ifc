@@ -10,4 +10,4 @@ source "/opt/ros/${ros_distro}/setup.bash"
 
 colcon build
 source install/setup.bash
-ros2 run horizon_detection horizon_detection --ros-args --params-file config.yaml
+ros2 launch ifc launch.py params_file:=config.yaml

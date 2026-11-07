@@ -3,6 +3,8 @@ Avoid unessesery comments
 Start names of private fields with underscore.
 Formatowanie: stosuj bloki kodu zaczynające się w nowej linii, puste linie wokoł bloku.
 
+Każdy moduł (za wyjątkiem `ifc`) w `src` jest repozytorium w organizacji `https://github.com/in-flight-calibration` i  submodułem w repozytorium `ifc`.
+
 ## Horizon detection
 
 - `horizon_detection` is a C++20 header-only detector library plus the `horizon_detection_node` executable. `HorizonDetection` owns the receiver, detector, and publisher. `Detector` and `HorizonDetection` inherit from `rclcpp::Node`.

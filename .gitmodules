@@ -10,3 +10,6 @@
 [submodule "src/ifc_msgs"]
 	path = src/ifc_msgs
 	url = git@github.com:in-flight-calibration/ifc_msgs.git
+[submodule "src/feature_tracker"]
+	path = src/feature_tracker
+	url = git@github.com:in-flight-calibration/feature_tracker.git

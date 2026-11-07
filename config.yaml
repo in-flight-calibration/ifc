@@ -7,28 +7,29 @@
     horizon:
       detector: alpha
       topic: /horizon_detection/horizon
-      debug_view: true
+      performance_topic: /performance/horizon_detection
+      debug_view: false
       alpha:
         prefilter:
           bilateral_diameter: 11
           bilateral_sigma_color: 75.0
           bilateral_sigma_space: 75.0
           gaussian_kernel_size: 7
+          downscale: 4
         edge_detector:
           canny_low_scale: 0.8
-          canny_high_scale: 2.0
+          canny_high_scale: 1.5
         closing:
-          kernel_size: 7
-        # HoughLinesP (lengths relative to image width)
+          kernel_size: 3
         line_detect:
           rho_resolution_px: 2.0
-          theta_resolution_degrees: 0.5
+          theta_resolution_degrees: 0.3
           threshold: 50
-          minimum_line_length_ratio: 0.2
+          minimum_line_length_ratio: 0.1
           maximum_line_gap_ratio: 0.025
         line_grouping:
           distance_tolerance: 0.02
-          slots: 5
+          slots: 3
         estimator:
           minimal_init_score: 0.33
           minimal_update_score: 0.6
@@ -37,15 +38,13 @@
           max_rho_rate: 1.0
           confidance_filter_tau: 0.5
 
-    delay:
-      clock_offset_configured: false
-      camera_to_attitude_seconds: 0.0
-      horizon_topic: /horizon_detection/horizon
-      attitude_topic: /fmu/out/vehicle_attitude
-      result_topic: /delay_estimator/estimate
-      window_seconds: 20.0
-      update_seconds: 2.0
-      minimum_offset: -0.5
-      maximum_offset: 0.5
-      grid_step: 0.025
-      resolution: 0.001
+    tracker:
+      type: orb
+      topic: /feature_tracker/features
+      performance_topic: /performance/feature_tracker
+      debug_view: true
+      horizon_margin_px: 10.0
+      orb:
+        ratio_test: 0.8
+        ransac_threshold_px: 1.0
+        ransac_confidence: 0.999

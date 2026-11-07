@@ -26,7 +26,7 @@ Inputs (not nodes of the system):
 | `VehicleLocalPosition` | `px4_msgs` | Position and velocity in local NED [m, m/s] and sample time. |
 | `VehicleGlobalPosition` | `px4_msgs` | Latitude, longitude, altitude and sample time. |
 | `Horizon` | `ifc_msgs` | Horizon line (angle θ, distance ρ) in the normalized image frame, their standard deviations, confidence and source image time. |
-| `FeatureMatches` | `ifc_msgs` | Matched pixel pairs between two subsequent frames with persistent feature ids, per-match quality and inlier/outlier flags, the fundamental matrix `F` (3×3, raw pixel coordinates) fitted to the inliers with its validity status, both frame times and image size. Flagged outliers remain available to downstream consumers. |
+| `Features` | `ifc_msgs` | Inlier matches (`Match`: 256-bit persistent id, normalized coordinates x1 y1 x2 y2, quality) between two subsequent frames, the fundamental matrix `F` (3×3, normalized coordinates; NaN when not reliably fitted, then matches are unfiltered) and both frame times. |
 | `Delay` | `ifc_msgs` | Delay [s], its standard deviation and estimation status. |
 | `AutopilotTelemetry` | `ifc_msgs` | Body attitude and camera-centre local and global position evaluated for a source frame using the current accepted delay and configured camera lever arm; includes frame time, target autopilot time, calibration revision and per-component validity/extrapolation status. |
 | `StreamTelemetry` | `ifc_msgs` | Per frame: frame time, interpolated attitude, local and global position, horizon and feature matches. |
@@ -68,7 +68,7 @@ Inputs (not nodes of the system):
 - Uses only the region below the horizon. Sky and clouds give no reliable, static features.
 - Optionally uses the relative attitude from `AutopilotTelemetry` to distinguish small and large rotations and adapt the feature search range. This is a heuristic, not an exact pixel-motion prediction before intrinsics and camera orientation are known. Without it the tracker works on the images alone.
 - Flags outliers with RANSAC on the fundamental matrix `F`. This needs no intrinsics. A degenerate or unreliable fit is marked invalid rather than presented as reliable geometry.
-- Publishes matched pixel pairs in raw image coordinates, including flagged outliers so downstream stages can reconsider them. The ids persist while a feature is tracked, so multi-frame tracks can be built. Fundamental matrix `F` and its validity are published in the same `FeatureMatches` message; geometric estimators select suitable matches using the flags.
+- Publishes inlier matches in normalized image coordinates (origin at the centre, x right, y down, scaled to [-1, 1] per axis). The up-to-256-bit ids persist while a feature is tracked, so multi-frame tracks can be built. Fundamental matrix `F` is published in the same `Features` message and is NaN when the fit is degenerate or unreliable.
 
 ### delay_estimator
 
