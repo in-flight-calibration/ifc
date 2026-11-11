@@ -3,7 +3,7 @@
     delay:
       attitude_buffer_size: 4000
       attitude_topic: /fmu/out/vehicle_attitude
-      debug: false
+      debug: true
       debug_view: true
       feature_buffer_size: 300
       features_topic: /feature_tracker/features
