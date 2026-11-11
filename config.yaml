@@ -76,7 +76,7 @@
         min_spread: 0.01
         ransac_threshold: 0.005
       debug_view: true
-      horizon_margin_px: 10.0
+      horizon_margin_px: 30.0
       orb:
         ransac_confidence: 0.999
         ransac_threshold_px: 1.0
