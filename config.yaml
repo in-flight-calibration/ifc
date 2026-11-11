@@ -1,50 +1,86 @@
 /**:
   ros__parameters:
-    image:
-      topic: /flightgear/image
-      transport: compressed
+    delay:
+      attitude_buffer_size: 4000
+      attitude_topic: /fmu/out/vehicle_attitude
+      debug_view: true
+      feature_buffer_size: 300
+      features_topic: /feature_tracker/features
+      flow:
+        expansion: false
+        huber_k: 1.345
+        max_cost: 0.5
+        max_iterations: 20
+        min_excitation_rad_s: 0.05
+        min_samples: 60
+        ridge: 0.001
+      horizon_buffer_size: 300
+      horizon_topic: /horizon_detection/horizon
+      horizon:
+        huber_k: 1.345
+        max_cost: 0.5
+        max_iterations: 50
+        min_excitation_rad: 0.02
+        min_samples: 60
+      local_position_buffer_size: 2000
+      local_position_topic: /fmu/out/vehicle_local_position
+      performance_topic: /performance/delay_estimator
+      search:
+        max_delay_ms: 500
+        neighbours: 5
+        steps_ms: [20, 5, 1]
+      topic: /delay_estimator/delay
+      update_ms: 1000
 
     horizon:
-      detector: alpha
-      topic: /horizon_detection/horizon
-      performance_topic: /performance/horizon_detection
-      debug_view: false
       alpha:
+        closing:
+          kernel_size: 3
+        edge_detector:
+          canny_high_scale: 1.5
+          canny_low_scale: 0.8
+        estimator:
+          confidance_filter_tau: 0.5
+          max_rho_rate: 1.0
+          max_theta_rate: 90.0
+          minimal_init_score: 0.33
+          minimal_update_score: 0.6
+          timeout_s: 0.1
+        line_detect:
+          maximum_line_gap_ratio: 0.025
+          minimum_line_length_ratio: 0.1
+          rho_resolution_px: 2.0
+          theta_resolution_degrees: 0.3
+          threshold: 50
+        line_grouping:
+          distance_tolerance: 0.02
+          slots: 3
         prefilter:
           bilateral_diameter: 11
           bilateral_sigma_color: 75.0
           bilateral_sigma_space: 75.0
-          gaussian_kernel_size: 7
           downscale: 4
-        edge_detector:
-          canny_low_scale: 0.8
-          canny_high_scale: 1.5
-        closing:
-          kernel_size: 3
-        line_detect:
-          rho_resolution_px: 2.0
-          theta_resolution_degrees: 0.3
-          threshold: 50
-          minimum_line_length_ratio: 0.1
-          maximum_line_gap_ratio: 0.025
-        line_grouping:
-          distance_tolerance: 0.02
-          slots: 3
-        estimator:
-          minimal_init_score: 0.33
-          minimal_update_score: 0.6
-          timeout_s: 0.1
-          max_theta_rate: 90.0
-          max_rho_rate: 1.0
-          confidance_filter_tau: 0.5
+          gaussian_kernel_size: 7
+      debug_view: false
+      detector: alpha
+      performance_topic: /performance/horizon_detection
+      topic: /horizon_detection/horizon
+
+    image:
+      topic: /flightgear/image
+      transport: compressed
 
     tracker:
-      type: orb
-      topic: /feature_tracker/features
-      performance_topic: /performance/feature_tracker
+      affine:
+        min_matches: 12
+        min_spread: 0.01
+        ransac_threshold: 0.005
       debug_view: true
       horizon_margin_px: 10.0
       orb:
-        ratio_test: 0.8
-        ransac_threshold_px: 1.0
         ransac_confidence: 0.999
+        ransac_threshold_px: 1.0
+        ratio_test: 0.8
+      performance_topic: /performance/feature_tracker
+      topic: /feature_tracker/features
+      type: orb

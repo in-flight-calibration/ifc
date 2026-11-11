@@ -21,4 +21,10 @@ def generate_launch_description():
             parameters=[params_file],
             output='screen',
         ),
+        Node(
+            package='delay_estimator',
+            executable='delay_estimator',
+            parameters=[params_file],
+            output='screen',
+        ),
     ])

@@ -27,7 +27,7 @@ Inputs (not nodes of the system):
 | `VehicleGlobalPosition` | `px4_msgs` | Latitude, longitude, altitude and sample time. |
 | `Horizon` | `ifc_msgs` | Horizon line (angle θ, distance ρ) in the normalized image frame, their standard deviations, confidence and source image time. |
 | `Features` | `ifc_msgs` | Inlier matches (`Match`: 256-bit persistent id, normalized coordinates x1 y1 x2 y2, quality) between two subsequent frames, the fundamental matrix `F` (3×3, normalized coordinates; NaN when not reliably fitted, then matches are unfiltered) and both frame times. |
-| `Delay` | `ifc_msgs` | Delay [s], its standard deviation and estimation status. |
+| `Delay` | `ifc_msgs` | Delay and its standard deviation [ns, `int64`], with a `valid` flag; header stamp is the publication time. |
 | `AutopilotTelemetry` | `ifc_msgs` | Body attitude and camera-centre local and global position evaluated for a source frame using the current accepted delay and configured camera lever arm; includes frame time, target autopilot time, calibration revision and per-component validity/extrapolation status. |
 | `StreamTelemetry` | `ifc_msgs` | Per frame: frame time, interpolated attitude, local and global position, horizon and feature matches. |
 | `CameraOrientation` | `ifc_msgs` | Rotation body → camera (quaternion) and its covariance. |
@@ -90,8 +90,8 @@ Inputs (not nodes of the system):
 - **Observability and acceptance.**
   - Mere motion is insufficient: regular single-axis or periodic motion can let the fitted camera mapping absorb a time shift or produce several delay minima.
   - A planned AP calibration mode will excite roll and pitch with a distinctive changing-frequency signal, such as a logarithmic sine sweep, within the aircraft's flight limits. Multi-axis excitation and varying frequency should reduce temporal ambiguity, but do not replace observability checks.
-  - Require sufficient excitation, a well-separated delay minimum and validation on a held-out temporal block. Low residuals or stable repeated estimates alone do not establish correctness.
-- Publishes `Delay` with its standard deviation and status.
+  - Require sufficient excitation, a well-separated delay minimum away from the search-range edges and a low normalized fit cost at that minimum. Low residuals or stable repeated estimates alone do not establish correctness.
+- Publishes `Delay` in nanoseconds with its standard deviation; `valid = false` when the window is rejected.
 
 ### telemetry_synchronizer
 

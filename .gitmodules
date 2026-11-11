@@ -13,3 +13,6 @@
 [submodule "src/feature_tracker"]
 	path = src/feature_tracker
 	url = git@github.com:in-flight-calibration/feature_tracker.git
+[submodule "src/delay_estimator"]
+	path = src/delay_estimator
+	url = git@github.com:in-flight-calibration/delay_estimator.git
