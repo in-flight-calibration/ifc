@@ -3,6 +3,7 @@
     delay:
       attitude_buffer_size: 4000
       attitude_topic: /fmu/out/vehicle_attitude
+      debug: false
       debug_view: true
       feature_buffer_size: 300
       features_topic: /feature_tracker/features
@@ -75,6 +76,7 @@
         min_matches: 12
         min_spread: 0.01
         ransac_threshold: 0.005
+      debug: false
       debug_view: true
       horizon_margin_px: 30.0
       orb:
