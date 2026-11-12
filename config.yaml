@@ -12,8 +12,8 @@
 
     delay_estimator:
       attitude_buffer_size: 4000
-      debug: false
-      debug_view: false
+      debug: true
+      debug_view: true
       feature_buffer_size: 300
       flow:
         expansion: false
@@ -67,12 +67,12 @@
           max_theta_rate: 90.0
           minimal_init_score: 0.33
           minimal_update_score: 0.6
-          timeout_s: 0.1
+          timeout_ms: 100
         line_detect:
           maximum_line_gap_ratio: 0.025
           minimum_line_length_ratio: 0.1
           rho_resolution_px: 2.0
-          theta_resolution_degrees: 0.3
+          theta_resolution_rad: 0.005
           threshold: 50
         line_grouping:
           distance_tolerance: 0.02
