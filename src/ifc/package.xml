@@ -9,11 +9,14 @@
 
     <buildtool_depend>ament_cmake</buildtool_depend>
 
+    <exec_depend>calibration_manager</exec_depend>
     <exec_depend>delay_estimator</exec_depend>
     <exec_depend>feature_tracker</exec_depend>
     <exec_depend>horizon_detection</exec_depend>
     <exec_depend>launch</exec_depend>
     <exec_depend>launch_ros</exec_depend>
+    <exec_depend>stream_telemetry</exec_depend>
+    <exec_depend>telemetry_synchronizer</exec_depend>
 
     <export>
         <build_type>ament_cmake</build_type>

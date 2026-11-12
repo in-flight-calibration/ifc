@@ -10,8 +10,14 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('params_file', default_value='config.yaml'),
         Node(
-            package='horizon_detection',
-            executable='horizon_detection',
+            package='calibration_manager',
+            executable='calibration_manager',
+            parameters=[params_file],
+            output='screen',
+        ),
+        Node(
+            package='delay_estimator',
+            executable='delay_estimator',
             parameters=[params_file],
             output='screen',
         ),
@@ -22,8 +28,20 @@ def generate_launch_description():
             output='screen',
         ),
         Node(
-            package='delay_estimator',
-            executable='delay_estimator',
+            package='horizon_detection',
+            executable='horizon_detection',
+            parameters=[params_file],
+            output='screen',
+        ),
+        Node(
+            package='stream_telemetry',
+            executable='stream_telemetry',
+            parameters=[params_file],
+            output='screen',
+        ),
+        Node(
+            package='telemetry_synchronizer',
+            executable='telemetry_synchronizer',
             parameters=[params_file],
             output='screen',
         ),

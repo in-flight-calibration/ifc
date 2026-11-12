@@ -16,3 +16,12 @@
 [submodule "src/delay_estimator"]
 	path = src/delay_estimator
 	url = git@github.com:in-flight-calibration/delay_estimator.git
+[submodule "src/calibration_manager"]
+	path = src/calibration_manager
+	url = git@github.com:in-flight-calibration/calibration_manager.git
+[submodule "src/telemetry_synchronizer"]
+	path = src/telemetry_synchronizer
+	url = git@github.com:in-flight-calibration/telemetry_synchronizer.git
+[submodule "src/stream_telemetry"]
+	path = src/stream_telemetry
+	url = git@github.com:in-flight-calibration/stream_telemetry.git

@@ -31,7 +31,7 @@
         neighbours: 5
         steps_ms: [20, 5, 1]
       topic: /delay_estimator/delay
-      update_ms: 1000
+      update_ms: 500
 
     horizon:
       alpha:
@@ -68,6 +68,12 @@
       performance_topic: /performance/horizon_detection
       topic: /horizon_detection/horizon
 
+    manager:
+      delay:
+        topic: /delay_estimator/delay
+      topic: /calibration_manager/results
+      update_ms: 500
+
     image:
       topic: /flightgear/image
       transport: compressed
@@ -86,3 +92,10 @@
       performance_topic: /performance/feature_tracker
       topic: /feature_tracker/features
       type: orb
+
+    stream:
+      topic: /stream_telemetry/telemetry
+
+    synchronizer:
+      topic: /telemetry_synchronizer/telemetry
+
