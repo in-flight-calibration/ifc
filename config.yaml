@@ -3,8 +3,8 @@
     delay:
       attitude_buffer_size: 4000
       attitude_topic: /fmu/out/vehicle_attitude
-      debug: true
-      debug_view: true
+      debug: false
+      debug_view: false
       feature_buffer_size: 300
       features_topic: /feature_tracker/features
       flow:
@@ -55,6 +55,7 @@
           threshold: 50
         line_grouping:
           distance_tolerance: 0.02
+          minimal_coverage: 0.5
           slots: 3
         prefilter:
           bilateral_diameter: 11
@@ -62,7 +63,7 @@
           bilateral_sigma_space: 75.0
           downscale: 4
           gaussian_kernel_size: 7
-      debug_view: false
+      debug_view: true
       detector: alpha
       performance_topic: /performance/horizon_detection
       topic: /horizon_detection/horizon
@@ -76,8 +77,7 @@
         min_matches: 12
         min_spread: 0.01
         ransac_threshold: 0.005
-      debug: false
-      debug_view: true
+      debug_view: false
       horizon_margin_px: 30.0
       orb:
         ransac_confidence: 0.999
