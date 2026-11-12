@@ -1,12 +1,20 @@
 /**:
   ros__parameters:
-    delay:
+    autopilot:
+      vehicle_angular_velocity: /fmu/out/vehicle_angular_velocity
+      vehicle_attitude: /fmu/out/vehicle_attitude
+      vehicle_global_position: /fmu/out/vehicle_global_position
+      vehicle_local_position: /fmu/out/vehicle_local_position
+
+    calibration_manager:
+      topic: /calibration_manager/calibration_results
+      update_ms: 500
+
+    delay_estimator:
       attitude_buffer_size: 4000
-      attitude_topic: /fmu/out/vehicle_attitude
       debug: false
       debug_view: false
       feature_buffer_size: 300
-      features_topic: /feature_tracker/features
       flow:
         expansion: false
         huber_k: 1.345
@@ -15,17 +23,15 @@
         min_excitation_rad_s: 0.05
         min_samples: 60
         ridge: 0.001
-      horizon_buffer_size: 300
-      horizon_topic: /horizon_detection/horizon
       horizon:
         huber_k: 1.345
         max_cost: 0.5
         max_iterations: 50
         min_excitation_rad: 0.02
         min_samples: 60
+      horizon_buffer_size: 300
       local_position_buffer_size: 2000
-      local_position_topic: /fmu/out/vehicle_local_position
-      performance_topic: /performance/delay_estimator
+      performance_topic: /delay_estimator/performance
       search:
         max_delay_ms: 500
         neighbours: 5
@@ -33,7 +39,22 @@
       topic: /delay_estimator/delay
       update_ms: 500
 
-    horizon:
+    feature_tracker:
+      affine:
+        min_matches: 12
+        min_spread: 0.01
+        ransac_threshold: 0.005
+      debug_view: false
+      horizon_margin_px: 30.0
+      orb:
+        ransac_confidence: 0.999
+        ransac_threshold_px: 1.0
+        ratio_test: 0.8
+      performance_topic: /feature_tracker/performance
+      topic: /feature_tracker/features
+      type: orb
+
+    horizon_detection:
       alpha:
         closing:
           kernel_size: 3
@@ -65,37 +86,15 @@
           gaussian_kernel_size: 7
       debug_view: true
       detector: alpha
-      performance_topic: /performance/horizon_detection
+      performance_topic: /horizon_detection/performance
       topic: /horizon_detection/horizon
-
-    manager:
-      delay:
-        topic: /delay_estimator/delay
-      topic: /calibration_manager/results
-      update_ms: 500
 
     image:
       topic: /flightgear/image
       transport: compressed
 
-    tracker:
-      affine:
-        min_matches: 12
-        min_spread: 0.01
-        ransac_threshold: 0.005
-      debug_view: false
-      horizon_margin_px: 30.0
-      orb:
-        ransac_confidence: 0.999
-        ransac_threshold_px: 1.0
-        ratio_test: 0.8
-      performance_topic: /performance/feature_tracker
-      topic: /feature_tracker/features
-      type: orb
+    stream_telemetry:
+      topic: /stream_telemetry/stream_telemetry
 
-    stream:
-      topic: /stream_telemetry/telemetry
-
-    synchronizer:
-      topic: /telemetry_synchronizer/telemetry
-
+    telemetry_synchronizer:
+      topic: /telemetry_synchronizer/autopilot_telemetry
