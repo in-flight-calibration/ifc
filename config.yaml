@@ -7,13 +7,19 @@
       vehicle_local_position: /fmu/out/vehicle_local_position
 
     calibration_manager:
+      debug: false
+      delay:
+        innov_gate_sd: 5.0
+        max_rejections: 3
+        process_noise: 0.25
+        validity_hysteresis: [0.5, 1.5]
       topic: /calibration_manager/calibration_results
       update_ms: 500
 
     delay_estimator:
       attitude_buffer_size: 4000
-      debug: true
-      debug_view: true
+      debug: false
+      debug_view: false
       feature_buffer_size: 300
       flow:
         expansion: false
@@ -33,9 +39,9 @@
       local_position_buffer_size: 2000
       performance_topic: /delay_estimator/performance
       search:
-        max_delay_ms: 500
+        max_delay_ns: 500000000
         neighbours: 5
-        steps_ms: [20, 5, 1]
+        steps_ns: [20000000, 5000000, 1000000]
       topic: /delay_estimator/delay
       update_ms: 500
 
@@ -84,7 +90,7 @@
           bilateral_sigma_space: 75.0
           downscale: 4
           gaussian_kernel_size: 7
-      debug_view: true
+      debug_view: false
       detector: alpha
       performance_topic: /horizon_detection/performance
       topic: /horizon_detection/horizon

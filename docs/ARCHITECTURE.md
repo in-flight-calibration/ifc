@@ -148,6 +148,7 @@ Inputs (not nodes of the system):
 - Subsequently runs continuous refinement: acceptance never freezes a parameter, and delay can change during flight.
 - Filters incoming estimates and checks observability, uncertainty and held-out validation before acceptance. Accounts for shared data in overlapping windows rather than treating repeated fits as independent evidence.
 - Owns delay-update filtering: distinguishes noisy estimates, gradual drift and latency jumps before publishing an update. A detected jump invalidates fitting windows spanning the change and temporarily pauses camera-parameter updates until alignment is reliable, so timing errors are not absorbed into camera calibration.
+- Implemented: `DelaySubmanager` smooths `Delay` estimates with a 1D random-walk Kalman filter (`R = delay_sd²`), rejects outliers with an innovation gate, resets to the new delay after consecutive rejections (latency jump) and publishes `delay`, `delay_sd` and a hysteresis-gated `delay_status` in `CalibrationResults`.
 - Publishes versioned updates with validity times. If an accepted result becomes unreliable, marks it as estimating again and pauses dependent estimation until usable alignment/calibration is restored.
 - Publishes all accepted values in `CalibrationResults`, the only feedback path:
   - `telemetry_synchronizer` uses the delay;

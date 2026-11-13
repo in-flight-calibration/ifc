@@ -13,7 +13,7 @@
 - Extensibility via an abstract base plus a `*Factory::create(name, ...)` that throws `std::invalid_argument` for unknown names; implementations live in `include/<role>/<name>/`.
 - Name things after what they are: one type per concept (`FlowSample`, `HorizonSample`) and one function per output (`get_flow`, `get_horizon`) rather than generic `Sample`/`get`. Follow the surrounding file's case (camelCase methods in older code, snake_case in `delay_estimator`).
 - Keep the code minimal: delete unused options, gates and parameters instead of disabling them; do not consume data the user excluded (e.g. horizon sd fields); keep side concerns (smoothing, filtering) out of the core when the user says so.
-- Shared, reusable pieces go to `ifc_tools`; files in a package are placed by role (`include/`, `include/input/`, `include/method/`).
+- Shared, reusable pieces go to `ifc_tools`; files in a package are placed by role (`include/`, `include/method/`; `ifc_tools/include/ifc_tools/{common,processing,receiver,filter,msg}/`); message converters live in `ifc_tools/msg/<message_in_snake_case>.hpp`.
 - Builds must be warning-free (`-Wall -Wextra -Wpedantic`). Tests are plain executables printing `PASS`/`FAIL` registered with CTest.
 
 ## Workflow
