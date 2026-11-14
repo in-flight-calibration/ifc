@@ -29,7 +29,8 @@ Inputs (not nodes of the system):
 | `Features` | `ifc_msgs` | Inlier matches (`Match`: 256-bit persistent id, normalized coordinates x1 y1 x2 y2, quality) between two subsequent frames, the fundamental matrix `F` (3×3, normalized coordinates; NaN when not reliably fitted, then matches are unfiltered) and both frame times. |
 | `Delay` | `ifc_msgs` | Delay and its standard deviation [ns, `int64`], with a `valid` flag; header stamp is the publication time. |
 | `AutopilotTelemetry` | `ifc_msgs` | Body attitude and camera-centre local and global position evaluated for a source frame using the current accepted delay and configured camera lever arm; includes frame time, target autopilot time, calibration revision and per-component validity/extrapolation status. |
-| `StreamTelemetry` | `ifc_msgs` | Per frame: frame time, interpolated attitude, local and global position, horizon and feature matches. |
+| `StreamInfo` | `ifc_msgs` | Planned. Per frame, without the image: `header` (publication time), `image_timestamp` (source frame time), `uint32[2] size` (width, height [px]) and `bool reset` (true on the first frame after the source time went backwards). |
+| `StreamTelemetry` | `ifc_msgs` | Per frame: its `StreamInfo` (frame time, size, reset), interpolated attitude, local and global position, horizon and feature matches. |
 | `CameraOrientation` | `ifc_msgs` | Rotation body → camera (quaternion) and its covariance. |
 | `CameraIntrinsics` | `ifc_msgs` | Focal lengths fx, fy, principal point cx, cy [px], image size and their covariance. |
 | `Terrain` | `ifc_msgs` | Local elevation grid: origin, resolution and heights [m]. |
@@ -45,7 +46,7 @@ Inputs (not nodes of the system):
 | `feature_tracker` | Detects features below the horizon and matches them with the previous frame. Optional attitude information from `AutopilotTelemetry` adapts the search range to motion magnitude; tracking also works before delay acceptance. RANSAC on the fundamental matrix flags outliers without requiring intrinsics. Publishes matched raw pixel pairs with persistent ids and quality flags. |
 | `delay_estimator` | Continuously estimates camera-to-telemetry time alignment, treating delay as approximately constant within each fitting window. Compares horizon motion with attitude, or frame-to-frame image motion with relative attitude over the same interval. Fits unknown camera-dependent mappings without requiring prior calibration, and rejects windows with insufficient excitation or ambiguous delay minima. |
 | `telemetry_synchronizer` | Buffers autopilot telemetry and interpolates attitude, local and global position at each frame's target autopilot time using the current accepted delay from `CalibrationResults`. Publishes `AutopilotTelemetry`; it is the only place where accepted delay is applied to downstream data. |
-| `stream_telemetry` | Bundles already interpolated `AutopilotTelemetry` with the horizon and feature matches of the same frame into one message used by later stages. Does not apply delay or interpolate telemetry again. |
+| `stream_telemetry` | Has two roles per frame. **1. Stream info** (planned): as soon as the frame arrives, publishes `StreamInfo` (frame time, size, reset) without decoding the image. **2. Stream telemetry**: once all data of the frame have arrived, bundles that `StreamInfo` with the already interpolated `AutopilotTelemetry`, horizon and feature matches into one `StreamTelemetry` used by later stages. Does not apply delay or interpolate telemetry again. |
 | `camera_estimator` | Jointly estimates the camera orientation relative to the UAV body and the intrinsics (focal length, i.e. FOV, and principal point). The horizon constrains roll and pitch of the camera; the inliers, compared with the vehicle rotation and translation between frames, constrain focal length, principal point and camera yaw. Solved by nonlinear least squares with a robust loss. |
 | `terrain_model` | Builds a local elevation map around the vehicle from its global position and an elevation source. Gives `structure_from_motion` the ground geometry, so ground points can be located without long feature tracks. |
 | `structure_from_motion` | Tracks ground points over many frames, using poses from `StreamTelemetry`, current calibration and terrain as uncertain constraints. Estimates modest lens distortion and small corrections of orientation and intrinsics in one bundle adjustment without attributing every reprojection residual to the lens. |
@@ -95,7 +96,7 @@ Inputs (not nodes of the system):
 
 ### telemetry_synchronizer
 
-- Subscribes to frame timestamps from the camera stream, `VehicleAttitude`, `VehicleLocalPosition`, `VehicleGlobalPosition` and `CalibrationResults`.
+- Subscribes to frame timestamps from the camera stream (planned: `StreamInfo`), `VehicleAttitude`, `VehicleLocalPosition`, `VehicleGlobalPosition` and `CalibrationResults`.
 - Buffers each telemetry topic at its native rate. For every frame, evaluates `t_ap = t_frame + clock_offset + accepted_delay` and interpolates attitude, local and global position at that time. Attitude interpolation operates on rotations.
 - Takes the known camera position as configuration: a lever arm `r_b` in metres, expressed in body FRD axes from the telemetry position reference point to the camera optical centre. It is not estimated by calibration.
 - After interpolation, accounts for this lever arm using the body-to-world attitude: `p_camera = p_reference + R_wb · r_b`. Published local and global positions refer to the camera centre, with the global correction performed through the corresponding local navigation frame; attitude remains body-to-world. Downstream nodes must not apply the lever arm again.
@@ -106,7 +107,19 @@ Inputs (not nodes of the system):
 
 ### stream_telemetry
 
-- Builds one `StreamTelemetry` message per frame.
+The package has two roles for every frame, in this order:
+
+**1. Stream info – fast, per frame (planned)**
+
+- Runs as the `stream_info` node. The simulator publisher cannot be changed, so no `CameraInfo` is available.
+- Subscribes to `image.topic` with `image.transport` (`compressed` → `<topic>/compressed`) as `rclcpp::SerializedMessage`, so the large frame is received once but neither deserialized nor decoded.
+- Reads the source frame time from the CDR `header.stamp`. Size comes from the CDR `height`/`width` for `raw`, or from the encoded header in `data` for `compressed` (JPEG SOF marker, PNG IHDR).
+- Publishes `StreamInfo` immediately. `reset = true` on the first frame whose `image_timestamp` is older than the previous one (simulation restart or bag loop).
+- Consumers that need only frame times and size use `StreamInfo` instead of the video: `telemetry_synchronizer`, `calibration_manager` and role 2. On `reset` they clear their time-indexed buffers and filters.
+
+**2. Stream telemetry – complete, per frame**
+
+- Waits until all data of a frame have arrived, then builds one `StreamTelemetry` message containing its `StreamInfo`.
 - Joins already interpolated `AutopilotTelemetry` by source frame timestamp; does not repeat interpolation or delay correction.
 - Adds the horizon and feature matches of the same frame.
 - Is the single source of per-frame data for all later stages.
