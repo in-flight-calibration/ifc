@@ -2,3 +2,9 @@
 /install/
 /log/
 /.vscode/
+
+records/*
+
+# Plotjuggler
+PlotJuggler/
+plotjuggler_msgs/

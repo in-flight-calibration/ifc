@@ -2,7 +2,7 @@
 
 ## 1. Delay estimation
 
-`stream_telemetry` has two roles: it first publishes `stream_info` (frame time, size, reset) as soon as a frame arrives, without decoding it, and then `stream_telemetry` (that `stream_info` plus synchronized telemetry, horizon and features) once all data of the frame have arrived.
+`stream_telemetry` has two roles: it first publishes `stream_info` (frame time, size, reset) as soon as a frame arrives, and then `stream_telemetry` (that `stream_info` plus synchronized telemetry, horizon and features) once all data of the frame have arrived.
 
 ```mermaid
 flowchart TB

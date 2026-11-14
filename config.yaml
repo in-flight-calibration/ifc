@@ -7,7 +7,7 @@
       vehicle_local_position: /fmu/out/vehicle_local_position
 
     calibration_manager:
-      debug: false
+      debug: true
       delay:
         innov_gate_sd: 5.0
         max_rejections: 3
@@ -100,7 +100,14 @@
       transport: compressed
 
     stream_telemetry:
+      buffer_size: 3
+      stream_info_topic: /stream_telemetry/stream_info
       topic: /stream_telemetry/stream_telemetry
 
     telemetry_synchronizer:
+      keep_pct: 10.0
       topic: /telemetry_synchronizer/autopilot_telemetry
+      vehicle_angular_velocity_buffer_size: 1000
+      vehicle_attitude_buffer_size: 1000
+      vehicle_global_position_buffer_size: 500
+      vehicle_local_position_buffer_size: 500
