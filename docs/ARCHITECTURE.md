@@ -28,7 +28,7 @@ Inputs (not nodes of the system):
 | `Horizon` | `ifc_msgs` | Horizon line (angle θ, distance ρ) in the normalized image frame, their standard deviations, confidence and source image time. |
 | `Features` | `ifc_msgs` | Inlier matches (`Match`: 256-bit persistent id, normalized coordinates x1 y1 x2 y2, quality) between two subsequent frames, the fundamental matrix `F` (3×3, normalized coordinates; NaN when not reliably fitted, then matches are unfiltered) and both frame times. |
 | `Delay` | `ifc_msgs` | Delay and its standard deviation [ns, `int64`], with a `valid` flag; header stamp is the publication time. |
-| `AutopilotTelemetry` | `ifc_msgs` | Body attitude and camera-centre local and global position evaluated for a source frame using the current accepted delay and configured camera lever arm; includes frame time, target autopilot time, calibration revision and per-component validity/extrapolation status. |
+| `AutopilotTelemetry` | `ifc_msgs` | Body attitude and vehicle reference-point local and global position evaluated for a source frame using the current accepted delay; includes frame time, target autopilot time, calibration revision and per-component validity/extrapolation status. |
 | `StreamInfo` | `ifc_msgs` | Per frame, without the image: `header` (publication time), `image_timestamp` (source frame time), `uint32[2] size` (width, height [px]) and `bool reset` (true on the first frame after the source time went backwards). |
 | `StreamTelemetry` | `ifc_msgs` | Per frame: its `StreamInfo` (frame time, size, reset), interpolated attitude, local and global position, horizon and feature matches. |
 | `CameraOrientation` | `ifc_msgs` | Rotation body → camera (quaternion) and its covariance. |
@@ -86,6 +86,7 @@ Inputs (not nodes of the system):
 - **Method 2 – frame motion ↔ relative attitude.**
   - For each candidate delay, interpolate the roughly 200 Hz `VehicleAttitude` samples at the two shifted timestamps of a roughly 30 Hz frame pair. Interpolate on rotations, not quaternion components.
   - Compare image motion over that pair with the relative rotation between those attitudes. Integrated angular velocity over the same interval is an alternative; do not compare frame displacement directly with an instantaneous gyro sample.
+  - The camera-centre translation in frame-1 body axes is `q₁⁻¹(p₂ − p₁) + (q₁⁻¹q₂ − I)·r_b` with `r_b = camera.offset`.
   - An unknown fitted mapping relates image-motion summaries to relative rotation. A linear mapping is a local approximation whose validity depends on motion and feature distribution; translation and depth variation remain nuisance terms.
   - Search delay using buffered raw telemetry, independently of the currently accepted delay. The synchronizer provides interpolation for downstream consumers, not the candidate-dependent alignment used during this search.
 - **Observability and acceptance.**
@@ -98,8 +99,8 @@ Inputs (not nodes of the system):
 
 - Subscribes to frame timestamps from the camera stream (`StreamInfo`), `VehicleAttitude`, `VehicleLocalPosition`, `VehicleGlobalPosition` and `CalibrationResults`.
 - Buffers each telemetry topic at its native rate. For every frame, evaluates `t_ap = t_frame + clock_offset + accepted_delay` and interpolates attitude, local and global position at that time. Attitude interpolation operates on rotations.
-- Takes the known camera position as configuration: a lever arm `r_b` in metres, expressed in body FRD axes from the telemetry position reference point to the camera optical centre. It is not estimated by calibration.
-- After interpolation, accounts for this lever arm using the body-to-world attitude: `p_camera = p_reference + R_wb · r_b`. Published local and global positions refer to the camera centre, with the global correction performed through the corresponding local navigation frame; attitude remains body-to-world. Downstream nodes must not apply the lever arm again.
+- Publishes positions of the telemetry position reference point (the vehicle), not of the camera; attitude remains body-to-world. It does not apply the camera lever arm.
+- The known camera position is the configuration `camera.offset`: a lever arm `r_b` in metres, expressed in body FRD axes from the telemetry position reference point to the camera optical centre. It is not estimated by calibration. Every module that uses autopilot position loads it and applies `p_camera = p_reference + R_wb · r_b` itself (for the global position through the corresponding local navigation frame).
 - AP telemetry usually arrives ahead of the corresponding image, so bracketing samples are normally already available. If not, wait for a bounded interval; forward extrapolation is a last resort with a bounded horizon and explicit per-component quality flags. Missing or stale components remain invalid.
 - Publishes `AutopilotTelemetry` keyed by the original frame timestamp, with the target autopilot time and calibration revision. Both consumers receive the same aligned result.
 - Is the only place where accepted delay is applied to downstream data. Until the delay is accepted it does not publish; the image-only tracker and delay estimator remain operational.
@@ -112,7 +113,7 @@ The package has two roles for every frame, in this order. Each role is its own n
 **1. Stream info – fast, per frame**
 
 - The simulator publisher cannot be changed, so no `CameraInfo` is available; the frame is received once here and the small `StreamInfo` is published for the other nodes.
-- Receives `image.topic` with `image.transport` through `ifc_tools::ImageReceiver`; the size is the decoded frame's width and height. Reading the stamp and size from the serialized message without decoding is a possible optimization.
+- Receives `camera.topic` with `camera.transport` through `ifc_tools::ImageReceiver`; the size is the decoded frame's width and height. Reading the stamp and size from the serialized message without decoding is a possible optimization.
 - Publishes `StreamInfo` immediately. `reset = true` on the first frame whose `image_timestamp` is older than the previous one (simulation restart or bag loop).
 - Consumers that need only frame times and size use `StreamInfo` instead of the video: `telemetry_synchronizer`, `calibration_manager` and role 2. On `reset` they clear their time-indexed buffers and filters.
 
@@ -133,7 +134,7 @@ The package has two roles for every frame, in this order. Each role is its own n
 - They are estimated together because they are coupled: neither the horizon nor the inliers separate them alone.
 - Horizon: provides an additional, uncertainty-weighted constraint through `ℓ ∝ K⁻ᵀ · R_cb · g_b`. Its suitability depends on how closely the observed skyline represents the gravity horizon; orientation and intrinsics remain coupled.
 - Inliers:
-  - Body rotation and camera-centre translation between frames are obtained from synchronized telemetry, with their uncertainty; the configured lever arm is already accounted for.
+  - Body rotation and vehicle translation between frames are obtained from synchronized telemetry, with their uncertainty; the camera-centre translation is derived from them with `camera.offset`.
   - With `R_cb` and `K` they predict the epipolar geometry of every pair.
   - This constrains focal length, principal point and camera yaw.
 - Solved by nonlinear least squares with a robust loss over many frames.

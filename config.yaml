@@ -16,6 +16,11 @@
       topic: /calibration_manager/calibration_results
       update_ms: 500
 
+    camera:
+      offset: [0.0, 0.0, 0.0]
+      topic: /flightgear/image
+      transport: compressed
+
     delay_estimator:
       attitude_buffer_size: 4000
       debug: false
@@ -94,10 +99,6 @@
       detector: alpha
       performance_topic: /horizon_detection/performance
       topic: /horizon_detection/horizon
-
-    image:
-      topic: /flightgear/image
-      transport: compressed
 
     stream_telemetry:
       buffer_size: 3
