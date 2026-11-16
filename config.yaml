@@ -105,6 +105,14 @@
       stream_info_topic: /stream_telemetry/stream_info
       topic: /stream_telemetry/stream_telemetry
 
+    terrain_model:
+      debug: true
+      dtm_directory: src/terrain_model/dtm
+      half_size_m: 5000
+      hysteresis_m: 100
+      resolution_m: 10
+      topic: /terrain_model/terrain
+
     telemetry_synchronizer:
       keep_pct: 10.0
       topic: /telemetry_synchronizer/autopilot_telemetry

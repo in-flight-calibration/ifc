@@ -40,6 +40,12 @@ def generate_launch_description():
             output='screen',
         ),
         Node(
+            package='terrain_model',
+            executable='terrain_model',
+            parameters=[params_file],
+            output='screen',
+        ),
+        Node(
             package='telemetry_synchronizer',
             executable='telemetry_synchronizer',
             parameters=[params_file],

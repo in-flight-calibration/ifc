@@ -25,3 +25,6 @@
 [submodule "src/stream_telemetry"]
 	path = src/stream_telemetry
 	url = git@github.com:in-flight-calibration/stream_telemetry.git
+[submodule "src/terrain_model"]
+	path = src/terrain_model
+	url = git@github.com:in-flight-calibration/terrain_model.git

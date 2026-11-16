@@ -23,17 +23,17 @@ Inputs (not nodes of the system):
 | `Image` | `sensor_msgs` | Frame and its source timestamp, interpreted according to the time contract. |
 | `VehicleAttitude` | `px4_msgs` | Quaternion body → world (FRD → NED) and sample time. |
 | `VehicleAngularVelocity` | `px4_msgs` | Body angular rate [rad/s] and sample time. |
-| `VehicleLocalPosition` | `px4_msgs` | Position and velocity in local NED [m, m/s] and sample time. |
+| `VehicleLocalPosition` | `px4_msgs` | Position and velocity in local NED [m, m/s], NED origin `ref_lat`, `ref_lon`, `ref_alt` and sample time. |
 | `VehicleGlobalPosition` | `px4_msgs` | Latitude, longitude, altitude and sample time. |
 | `Horizon` | `ifc_msgs` | Horizon line (angle θ, distance ρ) in the normalized image frame, their standard deviations, confidence and source image time. |
 | `Features` | `ifc_msgs` | Inlier matches (`Match`: 256-bit persistent id, normalized coordinates x1 y1 x2 y2, quality) between two subsequent frames, the fundamental matrix `F` (3×3, normalized coordinates; NaN when not reliably fitted, then matches are unfiltered) and both frame times. |
 | `Delay` | `ifc_msgs` | Delay and its standard deviation [ns, `int64`], with a `valid` flag; header stamp is the publication time. |
-| `AutopilotTelemetry` | `ifc_msgs` | Body attitude and vehicle reference-point local and global position evaluated for a source frame using the current accepted delay; includes frame time, target autopilot time, calibration revision and per-component validity/extrapolation status. |
+| `AutopilotTelemetry` | `ifc_msgs` | Body attitude and vehicle reference-point local position with its NED origin (`ref_lat`, `ref_lon`, `ref_alt`) and global position evaluated for a source frame using the current accepted delay; includes frame time, target autopilot time, calibration revision and per-component validity/extrapolation status. |
 | `StreamInfo` | `ifc_msgs` | Per frame, without the image: `header` (publication time), `image_timestamp` (source frame time), `uint32[2] size` (width, height [px]) and `bool reset` (true on the first frame after the source time went backwards). |
 | `StreamTelemetry` | `ifc_msgs` | Per frame: its `StreamInfo` (frame time, size, reset), interpolated attitude, local and global position, horizon and feature matches. |
 | `CameraOrientation` | `ifc_msgs` | Rotation body → camera (quaternion) and its covariance. |
 | `CameraIntrinsics` | `ifc_msgs` | Focal lengths fx, fy, principal point cx, cy [px], image size and their covariance. |
-| `Terrain` | `ifc_msgs` | Local elevation grid: origin, resolution and heights [m]. |
+| `Terrain` | `ifc_msgs` | Terrain grid in the local NED frame: NED origin (`ref_lat`, `ref_lon`, `ref_alt`), north (`x`) and east (`y`) axes as `start:step:stop` and NED down `z` [m], NaN without data. |
 | `Distortion` | `ifc_msgs` | Distortion model and coefficients with their standard deviations. |
 | `CalibrationResults` | `ifc_msgs` | Current delay, camera orientation, intrinsics and distortion, each with its uncertainty and status (not estimated, estimating, accepted), plus calibration revision and validity time. Acceptance permits use, not permanent freezing. |
 
@@ -48,7 +48,7 @@ Inputs (not nodes of the system):
 | `telemetry_synchronizer` | Buffers autopilot telemetry and interpolates attitude, local and global position at each frame's target autopilot time using the current accepted delay from `CalibrationResults`. Publishes `AutopilotTelemetry`; it is the only place where accepted delay is applied to downstream data. |
 | `stream_telemetry` | Has two roles per frame. **1. Stream info**: as soon as the frame arrives, publishes `StreamInfo` (frame time, size, reset). **2. Stream telemetry**: once all data of the frame have arrived, bundles that `StreamInfo` with the already interpolated `AutopilotTelemetry`, horizon and feature matches into one `StreamTelemetry` used by later stages. Does not apply delay or interpolate telemetry again. |
 | `camera_estimator` | Jointly estimates the camera orientation relative to the UAV body and the intrinsics (focal length, i.e. FOV, and principal point). The horizon constrains roll and pitch of the camera; the inliers, compared with the vehicle rotation and translation between frames, constrain focal length, principal point and camera yaw. Solved by nonlinear least squares with a robust loss. |
-| `terrain_model` | Builds a local elevation map around the vehicle from its global position and an elevation source. Gives `structure_from_motion` the ground geometry, so ground points can be located without long feature tracks. |
+| `terrain_model` | Builds a local terrain grid in the NED frame around the vehicle from its local position, the NED origin and offline DTM files. Gives `structure_from_motion` the ground geometry, so ground points can be located without long feature tracks. |
 | `structure_from_motion` | Tracks ground points over many frames, using poses from `StreamTelemetry`, current calibration and terrain as uncertain constraints. Estimates modest lens distortion and small corrections of orientation and intrinsics in one bundle adjustment without attributing every reprojection residual to the lens. |
 | `calibration_manager` | Governs continuous, iterative calibration. Bootstraps delay, then orientation and intrinsics, then distortion; subsequently updates all stages as data permit. Checks observability, uncertainty and independent validation before publishing revised accepted values in `CalibrationResults`. |
 
@@ -141,9 +141,11 @@ The package has two roles for every frame, in this order. Each role is its own n
 
 ### terrain_model
 
-- Uses the global position to build a local elevation map around the vehicle.
-- The elevation source is DEM.
+- Uses the NED origin (`ref_*`) and local position from `StreamTelemetry` to build a 10 m grid (±5 km) around the vehicle in the local NED frame.
+- The elevation source is a DTM in GeoTIFF files (GUGiK NMT, 1 m averaged server-side to `--resolution`, default 10 m, fetched offline by `src/terrain_model/dtm.py` into `src/terrain_model/dtm`), reprojected with GDAL into PX4's azimuthal equidistant projection of the origin.
+- Loads the whole grid (about 60–80 ms for 1001×1001 at 10 m on one core) on a new origin, a reset or a jump beyond the grid; on a move of at least the hysteresis (100 m) from its centre it shifts the matrix and loads only the uncovered strips (about 15–25 ms); the DTM mosaic is opened once at startup.
 - Exists because the terrain is not planar.
+- Publishes `Terrain` with `transient_local` QoS (depth 1), so late subscribers get the current grid. Consumers use `ifc_tools::TerrainReceiver::grid()` (`z(x, y)`, `raycast(p, v)`) and ignore a grid whose origin differs from the NED origin of their telemetry.
 
 ### structure_from_motion
 
